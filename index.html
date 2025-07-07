@@ -1,3 +1,177 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artwork Placement API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="file"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        #result-image {
+            max-width: 100%;
+            margin-top: 20px;
+            display: none;
+        }
+        #error-message, #loading-message {
+            margin-top: 10px;
+            display: none;
+        }
+        #error-message {
+            color: red;
+        }
+        #loading-message {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Artwork Placement API Tester</h1>
+    <div class="form-container">
+        <label for="room-image">Room Image (JPEG, max 5MB)</label>
+        <input type="file" id="room-image" accept="image/jpeg" required>
+        
+        <label for="artwork-images">Artwork Images (JPEG, max 5MB each)</label>
+        <input type="file" id="artwork-images" accept="image/jpeg" multiple required>
+        
+        <label for="prompt">Placement Prompt</label>
+        <textarea id="prompt" rows="4" placeholder="e.g., place artwork on the center of the wall with wooden frame, 50% size; or replace existing artwork with new artwork on the left of the wall with black frame"></textarea>
+        
+        <button id="submit-button" onclick="submitForm()">Submit</button>
+        
+        <img id="result-image" alt="Result Image">
+        <div id="error-message"></div>
+        <div id="loading-message">Processing...</div>
+    </div>
+
+    <script>
+        let lastImageUrl = null;
+
+        async function submitForm() {
+            const roomImage = document.getElementById('room-image').files[0];
+            const artworkImages = document.getElementById('artwork-images').files;
+            const prompt = document.getElementById('prompt').value;
+            const submitButton = document.getElementById('submit-button');
+            const resultImage = document.getElementById('result-image');
+            const errorMessage = document.getElementById('error-message');
+            const loadingMessage = document.getElementById('loading-message');
+
+            // Clear previous state
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = '';
+            loadingMessage.style.display = 'none';
+            resultImage.style.display = 'none';
+            if (lastImageUrl) {
+                URL.revokeObjectURL(lastImageUrl);
+                lastImageUrl = null;
+            }
+
+            // Validate inputs
+            if (!roomImage || artworkImages.length === 0) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Please upload a room image and at least one artwork image.';
+                return;
+            }
+
+            // Validate file sizes (5MB max)
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (roomImage.size > maxSize || Array.from(artworkImages).some(file => file.size > maxSize)) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'All images must be JPEG files under 5MB.';
+                return;
+            }
+
+            // Validate file types
+            if (!roomImage.type.includes('jpeg') || Array.from(artworkImages).some(file => !file.type.includes('jpeg'))) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'All images must be JPEG format.';
+                return;
+            }
+
+            // Set default prompt based on number of artworks
+            const defaultPrompt = artworkImages.length === 1
+                ? 'place artwork on the center of the wall with wooden frame'
+                : 'place artworks on the center of the wall with wooden frames';
+
+            const formData = new FormData();
+            formData.append('room_image', roomImage);
+            for (let i = 0; i < artworkImages.length; i++) {
+                formData.append('artwork_images', artworkImages[i]);
+            }
+            formData.append('prompt', prompt || defaultPrompt);
+
+            try {
+                submitButton.disabled = true;
+                loadingMessage.style.display = 'block';
+
+                const response = await fetch('http://localhost:8000/place-artworks', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
+                }
+
+                const blob = await response.blob();
+                lastImageUrl = URL.createObjectURL(blob);
+                resultImage.src = lastImageUrl;
+                resultImage.style.display = 'block';
+                errorMessage.style.display = 'none';
+                loadingMessage.style.display = 'none';
+            } catch (error) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = `Error: ${error.message}`;
+                resultImage.style.display = 'none';
+                loadingMessage.style.display = 'none';
+            } finally {
+                submitButton.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,7 +216,11 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        button:hover {
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
             background-color: #45a049;
         }
         #result-image {
@@ -50,70 +228,122 @@
             margin-top: 20px;
             display: none;
         }
-        #error-message {
-            color: red;
+        #error-message, #loading-message {
             margin-top: 10px;
             display: none;
+        }
+        #error-message {
+            color: red;
+        }
+        #loading-message {
+            color: blue;
         }
     </style>
 </head>
 <body>
     <h1>Artwork Placement API Tester</h1>
     <div class="form-container">
-        <label for="room-image">Room Image</label>
+        <label for="room-image">Room Image (JPEG, max 5MB)</label>
         <input type="file" id="room-image" accept="image/jpeg" required>
         
-        <label for="artwork-images">Artwork Images</label>
+        <label for="artwork-images">Artwork Images (JPEG, max 5MB each)</label>
         <input type="file" id="artwork-images" accept="image/jpeg" multiple required>
         
         <label for="prompt">Placement Prompt</label>
-        <textarea id="prompt" rows="4" placeholder="e.g., place both artworks on the center of the wall both with wooden frames, reducing the size of the artwork (50% size)"></textarea>
+        <textarea id="prompt" rows="4" placeholder="e.g., place artwork on the center of the wall with wooden frame, 50% size; or replace existing artwork with new artwork with black frame; or replace objects on the wall with new artwork with gold frame"></textarea>
         
-        <button onclick="submitForm()">Submit</button>
+        <button id="submit-button" onclick="submitForm()">Submit</button>
         
         <img id="result-image" alt="Result Image">
         <div id="error-message"></div>
+        <div id="loading-message">Processing...</div>
     </div>
 
     <script>
+        let lastImageUrl = null;
+
         async function submitForm() {
             const roomImage = document.getElementById('room-image').files[0];
             const artworkImages = document.getElementById('artwork-images').files;
             const prompt = document.getElementById('prompt').value;
+            const submitButton = document.getElementById('submit-button');
             const resultImage = document.getElementById('result-image');
             const errorMessage = document.getElementById('error-message');
+            const loadingMessage = document.getElementById('loading-message');
 
+            // Clear previous state
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = '';
+            loadingMessage.style.display = 'none';
+            resultImage.style.display = 'none';
+            if (lastImageUrl) {
+                URL.revokeObjectURL(lastImageUrl);
+                lastImageUrl = null;
+            }
+
+            // Validate inputs
             if (!roomImage || artworkImages.length === 0) {
                 errorMessage.style.display = 'block';
                 errorMessage.textContent = 'Please upload a room image and at least one artwork image.';
                 return;
             }
 
+            // Validate file sizes (5MB max)
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (roomImage.size > maxSize || Array.from(artworkImages).some(file => file.size > maxSize)) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'All images must be JPEG files under 5MB.';
+                return;
+            }
+
+            // Validate file types
+            if (!roomImage.type.includes('jpeg') || Array.from(artworkImages).some(file => !file.type.includes('jpeg'))) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'All images must be JPEG format.';
+                return;
+            }
+
+            // Set default prompt based on number of artworks
+            const isReplace = prompt.toLowerCase().includes('replace');
+            const defaultPrompt = isReplace
+                ? `replace existing artwork with new artwork with wooden frame`
+                : artworkImages.length === 1
+                    ? 'place artwork on the center of the wall with wooden frame'
+                    : 'place artworks on the center of the wall with wooden frames';
+
             const formData = new FormData();
             formData.append('room_image', roomImage);
             for (let i = 0; i < artworkImages.length; i++) {
                 formData.append('artwork_images', artworkImages[i]);
             }
-            formData.append('prompt', prompt || 'place artworks on the center of the wall with wooden frames');
+            formData.append('prompt', prompt || defaultPrompt);
 
             try {
+                submitButton.disabled = true;
+                loadingMessage.style.display = 'block';
+
                 const response = await fetch('http://localhost:8000/place-artworks', {
                     method: 'POST',
                     body: formData
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
                 }
 
                 const blob = await response.blob();
-                resultImage.src = URL.createObjectURL(blob);
+                lastImageUrl = URL.createObjectURL(blob);
+                resultImage.src = lastImageUrl;
                 resultImage.style.display = 'block';
                 errorMessage.style.display = 'none';
+                loadingMessage.style.display = 'none';
             } catch (error) {
                 errorMessage.style.display = 'block';
                 errorMessage.textContent = `Error: ${error.message}`;
                 resultImage.style.display = 'none';
+                loadingMessage.style.display = 'none';
+            } finally {
+                submitButton.disabled = false;
             }
         }
     </script>
