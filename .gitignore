@@ -1,0 +1,63 @@
+# Python virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Compiled files
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Output images
+final_output.jpg
+*.jpg
+*.jpeg
+*.png
+
+# Package & build files
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Cache & logs
+*.log
+*.cache
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment variable files
+.env
+*.env
+
+# Test & coverage
+.coverage
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Jupyter
+*.ipynb_checkpoints
+
+# Misc
+*~
+

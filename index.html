@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artwork Placement API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="file"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result-image {
+            max-width: 100%;
+            margin-top: 20px;
+            display: none;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Artwork Placement API Tester</h1>
+    <div class="form-container">
+        <label for="room-image">Room Image</label>
+        <input type="file" id="room-image" accept="image/jpeg" required>
+        
+        <label for="artwork-images">Artwork Images</label>
+        <input type="file" id="artwork-images" accept="image/jpeg" multiple required>
+        
+        <label for="prompt">Placement Prompt</label>
+        <textarea id="prompt" rows="4" placeholder="e.g., place both artworks on the center of the wall both with wooden frames, reducing the size of the artwork (50% size)"></textarea>
+        
+        <button onclick="submitForm()">Submit</button>
+        
+        <img id="result-image" alt="Result Image">
+        <div id="error-message"></div>
+    </div>
+
+    <script>
+        async function submitForm() {
+            const roomImage = document.getElementById('room-image').files[0];
+            const artworkImages = document.getElementById('artwork-images').files;
+            const prompt = document.getElementById('prompt').value;
+            const resultImage = document.getElementById('result-image');
+            const errorMessage = document.getElementById('error-message');
+
+            if (!roomImage || artworkImages.length === 0) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Please upload a room image and at least one artwork image.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('room_image', roomImage);
+            for (let i = 0; i < artworkImages.length; i++) {
+                formData.append('artwork_images', artworkImages[i]);
+            }
+            formData.append('prompt', prompt || 'place artworks on the center of the wall with wooden frames');
+
+            try {
+                const response = await fetch('http://localhost:8000/place-artworks', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                resultImage.src = URL.createObjectURL(blob);
+                resultImage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            } catch (error) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = `Error: ${error.message}`;
+                resultImage.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
